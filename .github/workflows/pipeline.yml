@@ -33,8 +33,25 @@ jobs:
           SKIP_EXISTS: ${{ contains(join(toJson(github.event.commits.*.message)), '#skip') }}
         run: echo "$SKIP_EXISTS"
       - name: Trigger deployment
+        id: deploy
         if: ${{ github.event_name == 'push' && contains(join(toJson(github.event.commits.*.message)), '#skip') != true }}
         run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
+      - name: Deployment succeeded
+        uses: rjstone/discord-webhook-notify@v1
+        if: steps.deploy.outcome == 'success'
+        with:
+          severity: info
+          text: A new version of Pokedex deployed
+          details: to https://full-stack-open-pokedex-mnoj.onrender.com by Krishnanand2517
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+      - name: Deployment succeeded
+        uses: rjstone/discord-webhook-notify@v1
+        if: steps.deploy.outcome == 'failure'
+        with:
+          severity: error
+          text: Build failed
+          details: commit ${{ github.event.head_commit.url }} by Krishnanand2517 broke the build :(
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
   tag_release:
     needs: [simple_deployment_pipeline]
     runs-on: ubuntu-20.04
