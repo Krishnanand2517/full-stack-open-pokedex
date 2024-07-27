@@ -24,9 +24,9 @@ jobs:
         run: echo "$COMMIT_MESSAGES"
       - name: joined messages
         env:
-          JOINED_MESSAGES: ${{ join($COMMIT_MESSAGES) }}
+          JOINED_MESSAGES: ${{ join(toJson(github.event.commits.*.message)) }}
         run: echo "$JOINED_MESSAGES"
       - name: Check skip substring
         env:
-          SKIP_EXISTS: ${{ contains($JOINED_MESSAGES, '#skip') }}
+          SKIP_EXISTS: ${{ contains(join(toJson(github.event.commits.*.message)), '#skip') }}
         run: echo "$SKIP_EXISTS"
